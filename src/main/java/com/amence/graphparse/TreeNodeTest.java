@@ -66,14 +66,18 @@ public class TreeNodeTest {
         ThenNode<Integer> node5 = new ThenNode<>(5);
         ThenNode<Integer> node6 = new ThenNode<>(6);
         ThenNode<Integer> node7 = new ThenNode<>(7);
+        ThenNode<Integer> node8 = new ThenNode<>(8);
         node1.childs.add(node2);
-        node1.childs.add(node6);
+        node1.childs.add(node7);
         node2.childs.add(node3);
         node2.childs.add(node4);
+
         node3.childs.add(node5);
         node4.childs.add(node5);
-        node5.childs.add(node7);
-        node6.childs.add(node7);
+
+        node5.childs.add(node6);
+        node7.childs.add(node8);
+//        node8.childs.add(node6);
         build(node1);
         System.out.println("THEN(");
         node1.print(1);

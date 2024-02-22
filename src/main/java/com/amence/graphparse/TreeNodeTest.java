@@ -1,11 +1,27 @@
 package com.amence.graphparse;
 
+import com.yomahub.liteflow.builder.el.ELBus;
+import com.yomahub.liteflow.builder.el.ELWrapper;
+import com.yomahub.liteflow.builder.el.ThenELWrapper;
+import com.yomahub.liteflow.builder.el.WhenELWrapper;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class TreeNodeTest {
+
+
+    public static void convert(ELWrapper wrapper, Object array) {
+        if (wrapper instanceof ThenELWrapper) {
+            ThenELWrapper thenELWrapper = (ThenELWrapper) wrapper;
+            thenELWrapper.then(array);
+        } else if (wrapper instanceof WhenELWrapper) {
+            WhenELWrapper whenELWrapper = (WhenELWrapper) wrapper;
+            whenELWrapper.when(array);
+        }
+    }
 
     private static class ThenNode<T> {
 
@@ -21,13 +37,16 @@ public class TreeNodeTest {
             this.value = value;
         }
 
-        public void print(int deep) {
+        public void print(int deep,ELWrapper el) {
+            ThenELWrapper then = ELBus.then();
+            then.tag(value.toString());
             printDeep(deep);
+            convert(el,then);
             System.out.print("THEN(" + value + ")");
 
             if (next != null) {
                 System.out.println();
-                next.print(deep);
+                next.print(deep,el);
             }
         }
     }
@@ -39,13 +58,16 @@ public class TreeNodeTest {
         }
 
         @Override
-        public void print(int deep) {
+        public void print(int deep,ELWrapper el) {
             printDeep(deep);
+            WhenELWrapper when = ELBus.when();
             System.out.print("WHEN (\n");
             for (ThenNode<T> child : childs) {
                 printDeep(deep + 1);
+                ThenELWrapper then = ELBus.then();
                 System.out.print("THEN(\n");
-                child.print(deep + 2);
+                child.print(deep + 2,then);
+                when.when(then);
                 System.out.println();
                 printDeep(deep + 1);
                 System.out.print(")\n");
@@ -54,7 +76,7 @@ public class TreeNodeTest {
             System.out.print(")");
             if (next != null) {
                 System.out.println();
-                next.print(deep);
+                next.print(deep,when);
             }
         }
     }
@@ -85,9 +107,11 @@ public class TreeNodeTest {
 
 
         build(node1);
-        System.out.println("THEN(");
-        node1.print(1);
-        System.out.println("\n)");
+        ELWrapper elWrapper = ELBus.then();
+        node1.print(1,elWrapper);
+        String elStr = elWrapper.toEL(true);
+        System.out.println(elStr);
+
     }
 
     static void printDeep(int deep) {

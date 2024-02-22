@@ -11,7 +11,8 @@ public class TreeNodeTest {
 
         T value;
         ArrayList<ThenNode<T>> childs = new ArrayList<>();
-        Set<ThenNode<T>> tmp = new HashSet<>();
+
+        Set<ThenNode<T>> tmp = new HashSet<>(); // 用于记录分叉的起始点
         boolean marked;
 
         ThenNode<T> next;
@@ -66,19 +67,23 @@ public class TreeNodeTest {
         ThenNode<Integer> node4 = new ThenNode<>(4);
         ThenNode<Integer> node5 = new ThenNode<>(5);
         ThenNode<Integer> node6 = new ThenNode<>(6);
-        ThenNode<Integer> node7 = new ThenNode<>(7);
-        ThenNode<Integer> node8 = new ThenNode<>(8);
+//        ThenNode<Integer> node7 = new ThenNode<>(7);
+//        ThenNode<Integer> node8 = new ThenNode<>(8);
+//        ThenNode<Integer> node9 = new ThenNode<>(9);
+//        ThenNode<Integer> node10 = new ThenNode<>(10);
+
         node1.childs.add(node2);
-        node1.childs.add(node7);
+        node1.childs.add(node6);
+
         node2.childs.add(node3);
         node2.childs.add(node4);
+
 
         node3.childs.add(node5);
         node4.childs.add(node5);
 
-        node5.childs.add(node6);
-        node7.childs.add(node8);
-//        node8.childs.add(node6);
+
+
         build(node1);
         System.out.println("THEN(");
         node1.print(1);
@@ -97,17 +102,23 @@ public class TreeNodeTest {
         }
         node.marked = true;
         if (node.childs.size() > 1) {
+            // 当前节点存在分叉，单独处理子节点
             WhenNode<Integer> whenNode = new WhenNode<>();
             whenNode.childs.addAll(node.childs);
             node.childs.clear();
+            // 拼接下一个表达式
             node.next = whenNode;
+            // 获取分叉之后的聚合点
             ThenNode<Integer> next = findNext(whenNode.childs);
+            // 聚合点作为分叉之后的表达式拼接
             whenNode.next = next;
+            // 聚合点作为新的开始
             build(next);
             for (ThenNode<Integer> child : whenNode.childs) {
                 build(child);
             }
         } else if (!node.childs.isEmpty()) {
+            // 当前节点有且只有一个子节点，开始遍历子节点，子节点与父节点连接的表达式为Then
             ThenNode<Integer> thenNode = node.childs.get(0);
             if (!thenNode.marked) {
                 node.next = thenNode;
@@ -116,6 +127,10 @@ public class TreeNodeTest {
         }
     }
 
+    /**
+     * @param nodes 分叉的首节点，在每个经过的节点记录，分叉点信息
+     * @return
+     */
     private static ThenNode<Integer> findNext(List<ThenNode<Integer>> nodes) {
         // 从多个分支出发，标记沿途的所有点
         for (ThenNode<Integer> node : nodes) {
@@ -135,26 +150,46 @@ public class TreeNodeTest {
                 }
             }
         }
+        // 找到了聚合点，就要清除每个点对应的分叉点
         for (ThenNode<Integer> node : nodes) {
             clean(node);
         }
         return find;
     }
 
+    /**
+     * 全部标记分叉节点
+     * @param node 子节点
+     * @param mark 父节点
+     */
     private static void markTmp(ThenNode<Integer> node, ThenNode<Integer> mark) {
+        // 被父节点遍历过？
         node.tmp.add(mark);
+
+        // 这里在标记父节点遍历过所有的祖孙节点
         for (ThenNode<Integer> child : node.childs) {
             markTmp(child, mark);
         }
     }
 
+    /**
+     * 寻找分叉多个首节点 的交汇点，判断依据：1.子节点已经记录了，所有经过他的分叉节点
+     * @param node 经过的后续子节点
+     * @param roots 分叉的首节点list
+     * @return
+     */
     private static ThenNode<Integer> deepFind(ThenNode<Integer> node, List<ThenNode<Integer>> roots) {
+        // 如果该节点已经被处理过，已经输出编入了表达式 就不需要再处理了。在每次build的时候就会标记
         if (node.marked) {
             return null;
         }
+
+        // 如果当前节点记录的所有分叉节点和 起始的分叉节点list 完全相同
         if (node.tmp.containsAll(roots)) {
             return node;
         }
+
+        // 也需要遍历node的子节点，后面会有很多子节点
         for (ThenNode<Integer> child : node.childs) {
             ThenNode<Integer> find = deepFind(child, roots);
             if (find != null) {

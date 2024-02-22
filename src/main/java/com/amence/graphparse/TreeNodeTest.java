@@ -25,6 +25,7 @@ public class TreeNodeTest {
             System.out.print("THEN(" + value + ")");
 
             if (next != null) {
+                System.out.println();
                 next.print(deep);
             }
         }
@@ -38,7 +39,6 @@ public class TreeNodeTest {
 
         @Override
         public void print(int deep) {
-            System.out.println();
             printDeep(deep);
             System.out.print("WHEN (\n");
             for (ThenNode<T> child : childs) {
@@ -50,8 +50,9 @@ public class TreeNodeTest {
                 System.out.print(")\n");
             }
             printDeep(deep);
-            System.out.println(")");
+            System.out.print(")");
             if (next != null) {
+                System.out.println();
                 next.print(deep);
             }
         }
@@ -136,9 +137,6 @@ public class TreeNodeTest {
         }
         for (ThenNode<Integer> node : nodes) {
             clean(node);
-        }
-        if (find != null) {
-            find.marked = true;
         }
         return find;
     }
